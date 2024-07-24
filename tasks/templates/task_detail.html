@@ -2,31 +2,31 @@
 
 {% block content %}
 
-{{task.title}}
-
+<h1 class="text-center my-0">Task</h1>
 {{error}}
-
-<form method="POST">
-  {% csrf_token %}
-  {{form.as_p}}
-
-  <button>
-    Update
-  </button>
-</form>
-
-<form action="{% url 'complete_task' task.id %}" method="POST">
-  {% csrf_token %}
-  <button>
-    complete
-  </button>
-</form>
-
-<form action="{% url 'delete_task' task.id %}" method="POST">
-  {% csrf_token %}
-  <button>
-    delete
-  </button>
-</form>
-
+<div class="d-flex justify-content-center align-items-center flex-grow-1">
+    <div class="card" style="width: 40rem;">
+        <div class="card-body">
+            <h1 class="text-center">{{task.title}}</h1>
+            <form method="post">
+                {% csrf_token %}
+                <div>
+                    {{ form.title.label_tag }}
+                    <div>{{ form.title }}</div>
+                </div>
+                <div>
+                    {{ form.description.label_tag }}
+                    <div>{{ form.description }}</div>
+                </div>
+                
+                <button class="btn btn-primary d-block">
+                    Update
+                </button>
+                
+                
+            </form>
+            
+        </div>
+    </div>
+</div>
 {% endblock %}
