@@ -18,14 +18,20 @@
                     {{ form.description.label_tag }}
                     <div>{{ form.description }}</div>
                 </div>
-                
+
                 <button class="btn btn-primary d-block">
                     Update
                 </button>
-                
-                
             </form>
-            
+            <form action="{% url 'complete_task' task.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success d-block">Completada</button>
+            </form>
+            <form action="{% url 'delete_task' task.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger d-block">Eliminar</button>
+            </form>
+
         </div>
     </div>
 </div>

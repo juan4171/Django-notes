@@ -1,51 +1,69 @@
-{% extends 'base.html' %} 
+{% extends 'base.html' %}
 {% block content %}
 {{error}}
 <h1 class="text-center">Django ToDo app</h1>
-{% if form %}
-<form action="/create_task/" method="post">
-	{% csrf_token %}
-	<div>
-		{{ form.title.label_tag }}
-		<div>{{ form.title }}</div>
-	</div>
-	<div>
-		{{ form.description.label_tag }}
-		<div>{{ form.description }}</div>
-	</div>
-	<button type="submit" class="btn btn-primary">Crear task</button>
-</form>
-{% endif %}
-<ul class="list-group">
-	{% for task in tasks %}
-	<li class="list-group-item">
-		<div class="card">
-			<div class="card-body">
-				<h5 class="card-title">{{task.title}}</h5>
-				<p class="card-text">Descripcion: {{task.description}}</p>
-				<p class="card-text"><small class="text-body-secondary">Creada:
-						{{task.created|date:'M j Y:i'}}</small></p>
-				{% if task.datecompleted %}
-				<p class="card-text"><small class="text-body-secondary">Completada:
-						{{task.datecompleted|date:'M j Y:i'}}</small></p>
-				{% else %}
-				<div class="d-flex gap-2">
-					<form action="{% url 'complete_task' task.id %}" method="post">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-primary">Completada</button>
-					</form>
-					<a href="{% url 'task_detail' task.id %}" class="btn btn-primary text-decoration-none">Modificar</a>
-					<form action="{% url 'delete_task' task.id %}" method="post">
-						{% csrf_token %}
-						<button type="submit" class="btn btn-primary">Eliminar</button>
-					</form>
-				</div>
-				{% endif %}
-			</div>
-		</div>
 
-	</li>
-	{% endfor %}
-</ul>
+<div class="d-flex justify-content-center mb-2">
+	<div class="card" style="width: 40rem;">
+		{% if form %}
+		<div class="card-body" style="width: 40rem;">
+			<form action="/create_task/" method="post">
+				{% csrf_token %}
+				<div>
+					{{ form.title.label_tag }}
+					<div>{{ form.title }}</div>
+				</div>
+				<div>
+					{{ form.description.label_tag }}
+					<div>{{ form.description }}</div>
+				</div>
+				<button type="submit" class="btn btn-primary">Crear task</button>
+			</form>
+		</div>
+		{% endif %}
+		<div class="card-body">
+			<ul class="list-group gap-2">
+				{% for task in tasks %}
+
+				<li class="card">
+
+					<div class="card-body">
+						<div class="row g-0">
+							<div class="col-md-4">
+								<img src="..." class="img-fluid rounded-start" alt="...">
+							</div>
+							<div class="col-md-8">
+								<h5 class="card-title">{{task.title}}</h5>
+								<p class="card-text">Descripcion: {{task.description}}</p>
+								<div class="dflex">
+									<div class="">
+										<p class="card-text"><small class="text-body-secondary">Creada:
+												{{task.created|date:'M j Y:i'}}</small></p>
+										{% if task.datecompleted %}
+										<p class="card-text"><small class="text-body-secondary">Completada:
+												{{task.datecompleted|date:'M j Y:i'}}</small></p>
+										{% endif %}
+									</div>
+									<div class="">
+										<a href="{% url 'task_detail' task.id %}"
+											class="btn btn-primary text-decoration-none d-block">Modificar</a>
+									</div>
+								</div>
+
+
+							</div>
+						</div>
+
+
+					</div>
+
+				</li>
+
+				{% endfor %}
+			</ul>
+		</div>
+	</div>
+</div>
+
 
 {% endblock %}
