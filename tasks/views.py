@@ -33,7 +33,7 @@ def signup(request):
 @login_required
 def signout(request):
     logout(request)
-    return redirect('home')
+    return redirect('signin')
 
 
 def signin(request):
@@ -53,11 +53,6 @@ def signin(request):
 def tasks(request):
     tasks = Task.objects.filter(
         user=request.user, datecompleted__isnull=True).order_by('-created')
-    return render(request, 'tasks.html', {"tasks": tasks, "form": TaskForm})
-
-
-@login_required
-def create_task(request):
     if request.method == "POST":
         form = TaskForm(request.POST)
         if form.is_valid():
@@ -65,9 +60,9 @@ def create_task(request):
             new_task.user = request.user
             new_task.save()
             return redirect('tasks')
-        else:
-            return render(request, 'tasks.html', {"form": form, "error": "Error creating task."})
-    return redirect('tasks')
+    else:
+        form = TaskForm()
+    return render(request, 'tasks.html', {"tasks": tasks, "form": form})
 
 
 @login_required

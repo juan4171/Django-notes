@@ -1,53 +1,74 @@
 {% extends 'base.html' %}
 {% block content %}
-{{error}}
-<h1 class="text-center">Django ToDo app</h1>
+<h1 class="text-center">Tasks list:</h1>
 
 <div class="d-flex justify-content-center mb-2">
 	<div class="card" style="width: 40rem;">
 		{% if form %}
-		<div class="card-body" style="width: 40rem;">
-			<form action="/create_task/" method="post">
+		<div class="card-body">
+			<form action="{% url 'tasks' %}" method="post" class="needs-validation" novalidate>
 				{% csrf_token %}
-				<div>
+				<div class="mb-3">
 					{{ form.title.label_tag }}
-					<div>{{ form.title }}</div>
+					{{ form.title }}
+					{% if form.title.errors %}
+					<div id="titleFeedback" class="invalid-feedback">
+						{% for error in form.title.errors %}
+						{{ error }}
+						{% endfor %}
+					</div>
+					{% endif %}
 				</div>
-				<div>
+				<div class="mb-3">
 					{{ form.description.label_tag }}
-					<div>{{ form.description }}</div>
+					<div>
+						{{ form.description }}
+						{% if form.description.errors %}
+						<div id="descriptionFeedback" class="invalid-feedback">
+							{% for error in form.description.errors %}
+							{{ error }}
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
 				</div>
-				<button type="submit" class="btn btn-primary">Crear task</button>
+				<button type="submit" class="btn btn-primary mt-2">Create task</button>
 			</form>
 		</div>
 		{% endif %}
+		{% if tasks %}
 		<div class="card-body">
 			<ul class="list-group gap-2">
 				{% for task in tasks %}
-
 				<li class="card">
-
 					<div class="card-body">
 						<div class="row g-0">
-							<div class="col-md-4">
+							<div class="col-md-3">
 								<img src="..." class="img-fluid rounded-start" alt="...">
 							</div>
-							<div class="col-md-8">
+							<div class="col-md-9">
 								<h5 class="card-title">{{task.title}}</h5>
-								<p class="card-text">Descripcion: {{task.description}}</p>
-								<div class="dflex">
-									<div class="">
-										<p class="card-text"><small class="text-body-secondary">Creada:
-												{{task.created|date:'M j Y:i'}}</small></p>
+								<p class="card-text mb-2">Description: {{task.description}}</p>
+								<div class="d-flex justify-content-between align-items-center">
+									<div>
+										<p class="card-text"><small class="text-body-secondary">Created:
+												{{task.created}}</small></p>
 										{% if task.datecompleted %}
-										<p class="card-text"><small class="text-body-secondary">Completada:
-												{{task.datecompleted|date:'M j Y:i'}}</small></p>
+										<p class="card-text"><small class="text-body-secondary">Completed:
+												{{task.datecompleted}}</small></p>
 										{% endif %}
 									</div>
-									<div class="">
+									{% if not task.datecompleted %}
+									<div>
 										<a href="{% url 'task_detail' task.id %}"
-											class="btn btn-primary text-decoration-none d-block">Modificar</a>
+											class="btn btn-primary text-decoration-none d-block">Modify</a>
 									</div>
+									{% else %}
+									<form action="{% url 'delete_task' task.id %}" method="post">
+										{% csrf_token %}
+										<button type="submit" class="btn btn-danger d-block">Delete</button>
+									</form>
+									{% endif %}
 								</div>
 
 
@@ -62,6 +83,11 @@
 				{% endfor %}
 			</ul>
 		</div>
+		{% else %}
+		<div class="card-body">
+			<p class="card-text text-center">Actualmente no hay tareas para mostrar.</p>
+		</div>
+		{% endif %}
 	</div>
 </div>
 

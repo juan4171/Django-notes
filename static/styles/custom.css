@@ -1,0 +1,44 @@
+/* Reset some default browser styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    /* font-size: 62.5%;
+    1rem = 10px */
+}
+
+/* Body styling */
+body {
+    /* font-size: 1.6rem; */
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    background-color: #f7f7f7;
+    color: #333;
+}
+
+/* Paragraphs */
+p {
+    margin-bottom: 0;
+}
+
+/* Links */
+a {
+    text-decoration: none;
+}
+
+/* Lists */
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+ul li {
+    margin: 0;
+    padding: 0;
+    
+}

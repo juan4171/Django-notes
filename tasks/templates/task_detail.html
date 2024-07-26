@@ -2,34 +2,46 @@
 
 {% block content %}
 
-<h1 class="text-center my-0">Task</h1>
-{{error}}
-<div class="d-flex justify-content-center align-items-center flex-grow-1">
+<h1 class="text-center my-0">Task:</h1>
+<div class="d-flex justify-content-center">
     <div class="card" style="width: 40rem;">
         <div class="card-body">
             <h1 class="text-center">{{task.title}}</h1>
-            <form method="post">
-                {% csrf_token %}
-                <div>
-                    {{ form.title.label_tag }}
-                    <div>{{ form.title }}</div>
-                </div>
-                <div>
-                    {{ form.description.label_tag }}
-                    <div>{{ form.description }}</div>
-                </div>
-
-                <button class="btn btn-primary d-block">
-                    Update
-                </button>
+            <form method="post" class="needs-validation" novalidate>
+				{% csrf_token %}
+                <div class="mb-3">
+					{{ form.title.label_tag }}
+					{{ form.title }}
+					{% if form.title.errors %}
+					<div id="titleFeedback" class="invalid-feedback">
+						{% for error in form.title.errors %}
+						{{ error }}
+						{% endfor %}
+					</div>
+					{% endif %}
+				</div>
+                <div class="mb-3">
+					{{ form.description.label_tag }}
+					<div>
+						{{ form.description }}
+						{% if form.description.errors %}
+						<div id="descriptionFeedback" class="invalid-feedback">
+							{% for error in form.description.errors %}
+							{{ error }}
+							{% endfor %}
+						</div>
+						{% endif %}
+					</div>
+				</div>
+                <button type="submit" class="btn btn-primary mt-2">Update task</button>
             </form>
             <form action="{% url 'complete_task' task.id %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-success d-block">Completada</button>
+                <button type="submit" class="btn btn-success d-block">Done</button>
             </form>
             <form action="{% url 'delete_task' task.id %}" method="post">
                 {% csrf_token %}
-                <button type="submit" class="btn btn-danger d-block">Eliminar</button>
+                <button type="submit" class="btn btn-danger d-block">Delete</button>
             </form>
 
         </div>
