@@ -6,6 +6,7 @@ from django.db import IntegrityError
 from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from .models import Task
+from django.contrib import messages
 
 from .forms import TaskForm
 
@@ -59,6 +60,7 @@ def tasks(request):
             new_task = form.save(commit=False)
             new_task.user = request.user
             new_task.save()
+            messages.success(request, 'Task successfully created.')
             return redirect('tasks')
     else:
         form = TaskForm()
@@ -67,18 +69,16 @@ def tasks(request):
 
 @login_required
 def task_detail(request, task_id):
-    if request.method == 'GET':
-        task = get_object_or_404(Task, pk=task_id, user=request.user)
-        form = TaskForm(instance=task)
-        return render(request, 'task_detail.html', {'task': task, 'form': form})
-    else:
-        try:
-            task = get_object_or_404(Task, pk=task_id, user=request.user)
-            form = TaskForm(request.POST, instance=task)
+    task = get_object_or_404(Task, pk=task_id, user=request.user)
+    if request.method == 'POST':
+        form = TaskForm(request.POST, instance=task)
+        if form.is_valid():
             form.save()
+            messages.success(request, 'Task successfully updated.')
             return redirect('tasks')
-        except ValueError:
-            return render(request, 'task_detail.html', {'task': task, 'form': form, 'error': 'Error updating task.'})
+    else:
+        form = TaskForm(instance=task)
+    return render(request, 'task_detail.html', {'task': task, 'form': form})
 
 
 @login_required
@@ -87,7 +87,8 @@ def complete_task(request, task_id):
     if request.method == 'POST':
         task.datecompleted = timezone.now()
         task.save()
-        return redirect('tasks')
+        messages.success(request, 'Task successfully completed.')
+        return redirect('tasks_completed')
 
 
 @login_required
@@ -95,6 +96,7 @@ def delete_task(request, task_id):
     task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
         task.delete()
+        messages.warning(request, 'Task successfully deleted.')
         return redirect('tasks')
 
 
