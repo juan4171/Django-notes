@@ -112,6 +112,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+TIME_ZONE = 'America/Argentina/Buenos_Aires'
+# en la api se guardan las fechas en UTC por convencion, 
+# por lo que cada front debe convertir las fechas a su zona horaria local
+# con alguna funcion o algo asi TIME_ZONE = 'America/Argentina/Buenos_Aires'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/

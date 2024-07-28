@@ -66,7 +66,11 @@ def fetch_tasks(url, params=None):
 def convert_dates(tasks):
     def convert_date(date_str):
         try:
-            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+            # en la api se guardan las fechas en UTC por convencion, 
+            # por lo que cada front debe convertir las fechas a su zona horaria local
+            local_date = datetime.fromisoformat(date_str.replace(
+                'Z', '+00:00')).astimezone(timezone.get_current_timezone())
+            return local_date
         except ValueError:
             return None
 
