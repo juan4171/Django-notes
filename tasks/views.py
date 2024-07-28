@@ -1,3 +1,4 @@
+import requests
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout, authenticate
@@ -9,6 +10,7 @@ from .models import Task
 from django.contrib import messages
 
 from .forms import TaskForm
+from datetime import datetime
 
 # Create your views here.
 
@@ -50,58 +52,143 @@ def signin(request):
         return redirect('tasks')
 
 
+def fetch_tasks(url, params=None):
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        tasks = response.json()
+        convert_dates(tasks)
+        return tasks, None
+    except requests.RequestException as e:
+        return [], str(e)  # Retorna una lista vacía y el error
+
+
+def convert_dates(tasks):
+    def convert_date(date_str):
+        try:
+            return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%S.%fZ')
+        except ValueError:
+            return None
+
+    def process_task(task):
+        if 'created' in task:
+            task['created'] = convert_date(task['created'])
+        if 'datecompleted' in task and task['datecompleted']:
+            task['datecompleted'] = convert_date(task['datecompleted'])
+        return task
+
+    if isinstance(tasks, list):
+        for task in tasks:
+            process_task(task)
+    elif isinstance(tasks, dict):
+        process_task(tasks)
+
+
 @login_required
 def tasks(request):
-    tasks = Task.objects.filter(
-        user=request.user, datecompleted__isnull=True).order_by('-created')
-    if request.method == "POST":
+    tasks, error = fetch_tasks('http://localhost:8000/api/todos/',
+                               {'datecompleted_null': 'true', 'ordering': '-created'})
+    if error:
+        messages.error(request, f"Error fetching tasks: {error}")
+
+    if request.method == 'POST':
         form = TaskForm(request.POST)
         if form.is_valid():
-            new_task = form.save(commit=False)
-            new_task.user = request.user
-            new_task.save()
-            messages.success(request, 'Task successfully created.')
+            task_data = {
+                'title': form.cleaned_data['title'],
+                'description': form.cleaned_data['description'],
+                # 'created': timezone.now().isoformat(), no hace falta enviar la fecha de creación
+                # porque la api la asigna automáticamente
+                'datecompleted': form.cleaned_data.get('completed', None),
+            }
+            try:
+                response = requests.post(
+                    'http://localhost:8000/api/todos/', json=task_data)
+                response.raise_for_status()
+                messages.success(request, 'Task successfully created.')
+            except requests.RequestException as e:
+                messages.error(request, f"Error creating task: {e}")
             return redirect('tasks')
     else:
         form = TaskForm()
+
     return render(request, 'tasks.html', {"tasks": tasks, "form": form})
 
 
 @login_required
 def task_detail(request, task_id):
-    task = get_object_or_404(Task, pk=task_id, user=request.user)
+    task, error = fetch_tasks(f'http://localhost:8000/api/todos/{task_id}/')
+
+    # Debugging: Check the type and content of task
+    if not isinstance(task, dict):
+        messages.error(request, f"Unexpected response format: {task}")
+        return redirect('tasks')
+
+    if error:
+        messages.error(request, f"Error fetching task: {error}")
+        return redirect('tasks')
+
     if request.method == 'POST':
-        form = TaskForm(request.POST, instance=task)
+        form = TaskForm(request.POST, initial=task)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Task successfully updated.')
+            task_data = {
+                'title': form.cleaned_data['title'],
+                'description': form.cleaned_data['description'],
+                # 'created': timezone.now().isoformat(), no hace falta enviar la fecha de creación
+                # porque la api la asigna automáticamente
+                'datecompleted': form.cleaned_data.get('completed', None),
+            }
+            try:
+                response = requests.put(
+                    f'http://localhost:8000/api/todos/{task_id}/', json=task_data)
+                response.raise_for_status()
+                messages.success(request, 'Task successfully updated.')
+            except requests.RequestException as e:
+                messages.error(request, f"Error updating task: {e}")
             return redirect('tasks')
     else:
-        form = TaskForm(instance=task)
+        form = TaskForm(initial=task)
+
     return render(request, 'task_detail.html', {'task': task, 'form': form})
 
 
 @login_required
 def complete_task(request, task_id):
-    task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
-        task.datecompleted = timezone.now()
-        task.save()
-        messages.success(request, 'Task successfully completed.')
+        task_data = {
+            'datecompleted': timezone.now().isoformat()
+        }
+        try:
+            response = requests.patch(
+                f'http://localhost:8000/api/todos/{task_id}/', json=task_data)
+            response.raise_for_status()
+            messages.success(request, 'Task successfully completed.')
+        except requests.RequestException as e:
+            messages.error(request, f"Error completing task: {e}")
         return redirect('tasks_completed')
+    else:
+        messages.error(request, "Invalid request method.")
+        return redirect('tasks')
 
 
 @login_required
 def delete_task(request, task_id):
-    task = get_object_or_404(Task, pk=task_id, user=request.user)
     if request.method == 'POST':
-        task.delete()
-        messages.warning(request, 'Task successfully deleted.')
+        try:
+            response = requests.delete(
+                f'http://localhost:8000/api/todos/{task_id}/')
+            response.raise_for_status()
+            messages.success(request, 'Task successfully deleted.')
+        except requests.RequestException as e:
+            messages.warning(request, f"Error deleting task: {e}")
         return redirect('tasks')
 
 
 @login_required
 def tasks_completed(request):
-    tasks = Task.objects.filter(
-        user=request.user, datecompleted__isnull=False).order_by('-datecompleted')
+    tasks, error = fetch_tasks('http://localhost:8000/api/todos/',
+                               {'datecompleted_null': 'false', 'ordering': '-created'})
+    if error:
+        messages.error(request, f"Error fetching tasks: {error}")
+
     return render(request, 'tasks.html', {"tasks": tasks})
